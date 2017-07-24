@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.github.justincranford.jcutils</groupId>
+		<artifactId>jcutil-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>jcutil-jul</artifactId>
+	<name>jcutil-jul</name>
+	<description>Utility methods to set and reset Java Util Logging log levels.</description>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.github.justincranford.jcutils</groupId>
+			<artifactId>jcutil-timer</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.justincranford.jcutils</groupId>
+			<artifactId>jcutil-validation</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.justincranford.jcutils</groupId>
+			<artifactId>jcutil-file</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+</project>
