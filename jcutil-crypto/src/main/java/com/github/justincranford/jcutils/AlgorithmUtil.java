@@ -19,10 +19,10 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-public class ProviderUtil {
-	private static final Logger LOG = Logger.getLogger(ProviderUtil.class.getName());
+public class AlgorithmUtil {
+	private static final Logger LOG = Logger.getLogger(AlgorithmUtil.class.getName());
 
-	private ProviderUtil() {
+	private AlgorithmUtil() {
 		// prevent class instantiation by making constructor private
 	}
 
@@ -112,33 +112,5 @@ public class ProviderUtil {
 			}
 		}
 		LOG.log(Level.INFO, sb.toString());
-	}
-
-	public static void trustAllCertificates() throws Exception {	// NOSONAR Define and throw a dedicated exception instead of using a generic one.
-		final SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(null, new TrustManager[] { new X509TrustManager() {
-        	@Override
-            public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-            	// do nothing
-            }
-        	@Override
-            public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-            	// do nothing
-            }
-        	@Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;	// NOSONAR Return an empty array instead of null.
-            }
-        } }, null);
-        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
-	}
-
-	public static void acceptAllHostnames() {
-		HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-        	@Override
-            public boolean verify(String hostname, SSLSession session) {
-                return true;
-            }
-        });
 	}
 }

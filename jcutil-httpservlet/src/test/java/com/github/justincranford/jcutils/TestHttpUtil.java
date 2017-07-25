@@ -42,4 +42,14 @@ public class TestHttpUtil {
 		Assert.assertEquals("UTF-32",     HttpUtil.parseCharacterEncoding("text/xml; charset=UTF-32; nonsense"));
 		Assert.assertEquals("ISO-8859-1", HttpUtil.parseCharacterEncoding("text/xml; charset=ISO-8859-1; nonsense"));
 	}
+
+	@Test
+	public void testTrustAllCertificates() throws Exception {
+		HttpUtil.trustAllCertificates();
+	}
+
+	@Test
+	public void testAcceptAllHostnames() throws Exception {
+		HttpUtil.acceptAllHostnames();
+	}
 }

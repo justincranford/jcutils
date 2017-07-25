@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -16,6 +18,12 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -224,5 +232,33 @@ public class HttpUtil {
 			this.status = status;
 			this.message = message;
 		}
+	}
+
+	public static void trustAllCertificates() throws Exception {	// NOSONAR Define and throw a dedicated exception instead of using a generic one.
+		final SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(null, new TrustManager[] { new X509TrustManager() {
+        	@Override
+            public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+            	// do nothing
+            }
+        	@Override
+            public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+            	// do nothing
+            }
+        	@Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return null;	// NOSONAR Return an empty array instead of null.
+            }
+        } }, null);
+        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+	}
+
+	public static void acceptAllHostnames() {
+		HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+        	@Override
+            public boolean verify(String hostname, SSLSession session) {
+                return true;
+            }
+        });
 	}
 }
