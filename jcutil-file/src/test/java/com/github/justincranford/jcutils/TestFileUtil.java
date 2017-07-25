@@ -63,8 +63,8 @@ public class TestFileUtil {
 
 	@Test
 	public void testComputeExtractDirectory() throws IOException {
-		Assert.assertEquals("R:\\tmp\\\\_something.jar_", FileUtil.computeExtractDirectory(new File("R:\\tmp"), new File("C:\\\\something.jar")).getCanonicalPath());
-		Assert.assertEquals("C:\\\\_something.jar_", FileUtil.computeExtractDirectory(new File(""), new File("C:\\\\something.jar")).getCanonicalPath());
+		Assert.assertEquals("R:\\tmp\\_something.jar_", FileUtil.computeExtractDirectory(new File("R:\\tmp"), new File("C:\\something.jar")).getCanonicalPath());
+		Assert.assertEquals("C:\\_something.jar_", FileUtil.computeExtractDirectory(new File(""), new File("C:\\something.jar")).getCanonicalPath());
 		Assert.assertEquals("C:\\_something_", FileUtil.computeExtractDirectory(new File(""), new File("C:\\something")).getCanonicalPath());
 		Assert.assertEquals("R:\\doesnotexist\\_something_", FileUtil.computeExtractDirectory(new File("R:\\doesnotexist"), new File("C:\\something")).getCanonicalPath());
 		Assert.assertEquals("C:\\something\\_else_", FileUtil.computeExtractDirectory(new File("C:\\something"), new File("C:\\something\\else")).getCanonicalPath());

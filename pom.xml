@@ -121,5 +121,8 @@
 		<module>jcutil-jul</module>
 		<module>jcutil-embeddedh2</module>
 		<module>jcutil-embeddedjetty</module>
+		<module>jcutil-xml</module>
+		<module>jcutil-httpservlet</module>
+		<module>jcutil-bitmask</module>
 	</modules>
 </project>
