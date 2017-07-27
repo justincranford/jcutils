@@ -7,17 +7,8 @@ import java.security.Provider;
 import java.security.Provider.Service;
 import java.security.Security;
 import java.security.Signature;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 public class AlgorithmUtil {
 	private static final Logger LOG = Logger.getLogger(AlgorithmUtil.class.getName());
