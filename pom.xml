@@ -29,6 +29,17 @@
 	</properties>
 
 	<dependencies>
+		<!-- Standardize all child modules on ProGuard 5.3.3 -->
+		<dependency>
+			<groupId>com.github.wvengen</groupId>
+			<artifactId>proguard-maven-plugin</artifactId>
+			<version>2.0.14</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.proguard</groupId>
+			<artifactId>proguard-base</artifactId>
+			<version>5.3.3</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -93,6 +104,46 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<!-- mvn clean compile org.owasp:dependency-check-maven:check -->
+			<plugin>
+			  <groupId>org.owasp</groupId>
+			  <artifactId>dependency-check-maven</artifactId>
+			  <version>3.0.2</version>
+				<executions>
+				  <execution>
+					  <goals>
+						  <goal>check</goal>
+					  </goals>
+				  </execution>
+			  </executions>
+			</plugin>
+			<plugin>
+				<groupId>com.github.wvengen</groupId>
+				<artifactId>proguard-maven-plugin</artifactId>
+				<version>2.0.14</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>proguard</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<injarNotExistsSkip>true</injarNotExistsSkip>
+					<proguardVersion>5.3.3</proguardVersion>
+					<obfuscate>true</obfuscate>
+					<injar>${project.build.finalName}.jar</injar>
+					<outjar>${project.build.finalName}-small.jar</outjar>
+					<outputDirectory>${project.build.directory}</outputDirectory>
+					<proguardInclude>../proguard.conf</proguardInclude>
+					<libs>
+						<lib>${java.home}/lib/rt.jar</lib>
+						<lib>${java.home}/lib/jce.jar</lib>
+						<lib>${java.home}/lib/jsse.jar</lib>
+					</libs>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

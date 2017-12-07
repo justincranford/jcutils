@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
+<!-- Jar/CVE suppression examples
+	<suppress>
+		<notes><![CDATA[file name: redline-1.2.5.jar]]></notes>
+		<gav regex="true">^org\.redline-rpm:redline:.*$</gav>
+		<cpe>cpe:/a:rpm:rpm</cpe>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[file name: redline-1.2.5.jar]]></notes>
+		<gav regex="true">^org\.redline-rpm:redline:.*$</gav>
+		<cpe>cpe:/a:rpm:package_manager</cpe>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[file name: xz-1.6.jar]]></notes>
+		<gav regex="true">^org\.tukaani:xz:.*$</gav>
+		<cpe>cpe:/a:tukaani:xz</cpe>
+	</suppress>
+-->
+</suppressions>
