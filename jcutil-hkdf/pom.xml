@@ -10,7 +10,7 @@
 
 	<artifactId>jcutil-hkdf</artifactId>
 	<name>jcutil-hkdf</name>
-	<description>Utilities for computing cryptos or checksums.</description>
+	<description>Utilities for computing HKDF (HMAC Key Derivation Function) values.</description>
 
 	<dependencies>
 		<dependency>
