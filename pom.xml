@@ -29,24 +29,6 @@
 	</properties>
 
 	<dependencies>
-		<!-- Standardize all child modules on ProGuard 5.3.3 -->
-		<dependency>
-			<groupId>com.github.wvengen</groupId>
-			<artifactId>proguard-maven-plugin</artifactId>
-			<version>2.0.14</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.proguard</groupId>
-			<artifactId>proguard-base</artifactId>
-			<version>5.3.3</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/junit/junit -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-			<scope>test</scope>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -59,14 +41,50 @@
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.25</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- mvn clean compile findbugs:findbugs -->
+		<dependency>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>findbugs-maven-plugin</artifactId>
+			<version>3.0.5</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- mvn clean package -->
+		<!-- Standardize all child modules on ProGuard 5.3.3 -->
+		<dependency>
+			<groupId>com.github.wvengen</groupId>
+			<artifactId>proguard-maven-plugin</artifactId>
+			<version>2.0.14</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.proguard</groupId>
+			<artifactId>proguard-base</artifactId>
+			<version>5.3.3</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<addMavenDescriptor>false</addMavenDescriptor>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -80,7 +98,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.10.4</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -94,7 +111,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.6</version>
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>
@@ -107,21 +123,20 @@
 			</plugin>
 			<!-- mvn clean compile org.owasp:dependency-check-maven:check -->
 			<plugin>
-			  <groupId>org.owasp</groupId>
-			  <artifactId>dependency-check-maven</artifactId>
-			  <version>3.0.2</version>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
 				<executions>
-				  <execution>
-					  <goals>
-						  <goal>check</goal>
-					  </goals>
-				  </execution>
-			  </executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
+			<!--
 			<plugin>
 				<groupId>com.github.wvengen</groupId>
 				<artifactId>proguard-maven-plugin</artifactId>
-				<version>2.0.14</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -135,7 +150,7 @@
 					<proguardVersion>5.3.3</proguardVersion>
 					<obfuscate>true</obfuscate>
 					<injar>${project.build.finalName}.jar</injar>
-					<outjar>${project.build.finalName}-small.jar</outjar>
+					<outjar>${project.build.finalName}-obfuscated.jar</outjar>
 					<outputDirectory>${project.build.directory}</outputDirectory>
 					<proguardInclude>../proguard.conf</proguardInclude>
 					<libs>
@@ -143,6 +158,24 @@
 						<lib>${java.home}/lib/jce.jar</lib>
 						<lib>${java.home}/lib/jsse.jar</lib>
 					</libs>
+				</configuration>
+			</plugin>
+			-->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>3.0.5</version>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>Low</threshold>
+					<failOnError>true</failOnError>
+					<plugins>
+						<plugin>
+							<groupId>com.h3xstream.findsecbugs</groupId>
+							<artifactId>findsecbugs-plugin</artifactId>
+							<version>LATEST</version> <!-- Auto-update to the latest stable -->
+						</plugin>
+					</plugins>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -189,5 +222,6 @@
 		<module>jcutil-xml</module>
 		<module>jcutil-httpservlet</module>
 		<module>jcutil-bitmask</module>
+		<module>jcutil-hkdf</module>
 	</modules>
 </project>
