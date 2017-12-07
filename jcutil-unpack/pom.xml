@@ -76,7 +76,7 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpg-jdk15on</artifactId>
-			<version>1.57</version>
+			<version>1.58</version>
 		</dependency>
 		<!-- Exclusions added to fix non-convergence of older jars with newer ones. -->
 		<!-- https://mvnrepository.com/artifact/com.github.junrar/junrar -->
