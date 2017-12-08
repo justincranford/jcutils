@@ -38,8 +38,8 @@ public class TestHkdfUtil {
 		this.samples  = samples;
 	}
 
-	@Parameters(name="{index}: {0}")	// Add parameter {0} to JUnit result label. EX: "[0: SunJCE]" and "[1: Entrust]"
-	public static Collection<Object[]> data() {	// EX: Collection.get(0)={"SunJCE",100,10000} & Collection.get(1)={"Entrust",100,10000}
+	@Parameters(name="{index}: {0}")	// Add parameter {0} to JUnit result label. EX: "[0: SunJCE]" and "[1: BC]"
+	public static Collection<Object[]> data() {	// EX: Collection.get(0)={"SunJCE",100,10000} & Collection.get(1)={"BC",100,10000}
 		final int warmups = 100;
 		final int samples = 1000;
 		return Arrays.asList(
