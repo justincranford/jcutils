@@ -214,6 +214,7 @@
 		<module>jcutil-multithread</module>
 		<module>jcutil-string</module>
 		<module>jcutil-file</module>
+		<module>jcutil-provider</module>
 		<module>jcutil-crypto</module>
 		<module>jcutil-unpack</module>
 		<module>jcutil-jul</module>
