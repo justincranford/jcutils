@@ -1,0 +1,38 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.github.justincranford.jcutils</groupId>
+		<artifactId>jcutil-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>jcutil-junit</artifactId>
+	<name>jcutil-junit</name>
+	<description>Utility methods for JUnit tests.</description>
+
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.justincranford.jcutils</groupId>
+			<artifactId>jcutil-timer</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.justincranford.jcutils</groupId>
+			<artifactId>jcutil-validation</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.justincranford.jcutils</groupId>
+			<artifactId>jcutil-multithread</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+</project>

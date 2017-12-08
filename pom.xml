@@ -224,5 +224,6 @@
 		<module>jcutil-bitmask</module>
 		<module>jcutil-hkdf</module>
 		<module>jcutil-proxy</module>
+		<module>jcutil-junit</module>
 	</modules>
 </project>
