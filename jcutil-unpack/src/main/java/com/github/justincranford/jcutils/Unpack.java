@@ -35,15 +35,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Main method to recursively file files and directories and recursively unpack them to a TEMP directory.
+ * Main method to recursively find files and directories and recursively unpack them to a TEMP directory.
  * - Recursive depth is unlimited.
- * - All files are unpacked based on file headers, not file name (ex: if something.tar is mislabeled something_tgz, it is unpacked anyway).
- *    - Note: Unrar is missing a file header check, and suffers bad performance from non-rar files, so it is wrapped with a RAR header check (but not RAR5).
- *    - Note: A file name exclusion filter is possible. Change it in code. For example, ignoring *.class from jar files can speed unpacking by 10-25x.
+ * - All files are unpacked based on file content, not file name, so mislabeled files will be unpacked anyway.
+ *    - Note: Unrar is missing a file header check, and performance suffers for parsing non-rar files. Workaround is to do a RAR header check (but not RAR5).
+ *    - Note: File name exclusion filtering is possible. Change it in code. For example, IGNORE_CLASS_FILES=true speeds up unpacking of jar files by 10-25x.
  * - For max performance:
- *    - Set TEMP/TMP to a RamDisk (ex: TEMP=R:/ or TMP=/mount/ramdrive). For example, "Radeon RamDisk" supports up to 4GB on Windows.
- *    - Add the TEMP/TMP "unpack" subdirectory to your Anti-Virus excluded folders, to avoid read-behind scan penalty, then manual scan after if required.
- * - 
+ *    - Set TEMP/TMP to a RamDisk (ex: TEMP=R:/ or TMP=/mount/ramdrive). For example, "AMD Radeon RamDisk" supports up to 4GB on Windows.
+ *    - Exclude TEMP/TMP from Anti-Virus scanning to avoid read-behind. Manually scan the content after unpack is done.
  */
 @SuppressWarnings({"unused"})
 public class Unpack {
@@ -54,7 +53,7 @@ public class Unpack {
 	private static final String DEFAULT_EXTRACT_JAVAZIP_TMP_DIRECTORY = SystemProperty.IS_WINDOWS ? "C:/" : "/tmp/";	// "./unpack" is appended
 	private static final boolean DELETE_EXTRACT_JAVAZIP_TMP_DIRECTORY = true;
 
-	private static final boolean IGNORE_CLASS_FILES = true;	// skip extraction & analysis for 10-15x performance improvement
+	private static final boolean IGNORE_CLASS_FILES = true;	// skip extraction & recursive analysis for 20-25x performance improvement
 
 	private Unpack() {
 		// declare private constructor to prevent instantiation of this class
@@ -68,13 +67,13 @@ public class Unpack {
 		final String[] requestedDirectoriesOrFiles = args;
 
 		final String unpackDirectoryName;
-		{	// MAX PERFORMANCE => Set TEMP/TMP to RamDisk (ex: TEMP=R:/) and exclude "unpack" subdirectory from Anti-Virus read-behind scanning.
+		{
 			final String tempEnvironmentVariable = System.getenv(SystemProperty.IS_WINDOWS ? "TEMP" : "TMP");	// EX: C:\Users\%USERNAME%\AppData\Local\Temp
 			if (null == tempEnvironmentVariable) {	// Ex: TMP may not be defined on Linux
 				unpackDirectoryName = DEFAULT_EXTRACT_JAVAZIP_TMP_DIRECTORY;
 			} else {
-				unpackDirectoryName = new File(tempEnvironmentVariable, "unpack").getCanonicalPath();
-				if (!FileUtil.makeCanonicalDirectories(unpackDirectoryName)) {	// Verify if directory exists, or if we successfully created it.
+				unpackDirectoryName = new File(tempEnvironmentVariable, "unpack").getCanonicalPath();	// append "/unpack" to temp directory
+				if (!FileUtil.makeCanonicalDirectories(unpackDirectoryName)) {	// Make temp unpack directory if necessary, and verify it exists.
 					LOG.log(Level.SEVERE, "Directory '" + unpackDirectoryName + "' does not exist and could not be created.\n");
 					return;
 				}

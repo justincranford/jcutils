@@ -34,7 +34,8 @@ import com.github.junrar.exception.RarException;
 import com.github.junrar.rarfile.FileHeader;
 
 /**
- * Uncompress gzip, bzip2, xz, lzma, Pack200, DEFLATE, Z, arj, dump and Z
+ * Uncompress gzip, bzip2, xz, lzma, Pack200, DEFLATE, Z, arj, dump and Z.
+ * There is only one public method UnpackHelper.unpackDirectoriesAndFiles().
  */
 public class UnpackHelper {
 	private static final Logger LOG = Logger.getLogger(UnpackHelper.class.getName());
@@ -118,10 +119,6 @@ public class UnpackHelper {
 	public static final String[]	MATCH_ENTRY_README		= { ".*README(\\.1st)?.*$" };	// NOSONAR Make this member "protected".
 	public static final String[]	MATCH_ENTRY_NON_ARCHIVES = StringUtil.concatenate(false, false, MATCH_ENTRY_META_INF, MATCH_ENTRY_CLASS, MATCH_ENTRY_TXT, MATCH_ENTRY_HTML, MATCH_ENTRY_JS, MATCH_ENTRY_CSS, MATCH_ENTRY_ICO, MATCH_ENTRY_TTF, MATCH_ENTRY_JSON, MATCH_ENTRY_PROPERTIES, MATCH_ENTRY_XML, MATCH_ENTRY_YML, MATCH_ENTRY_PY, MATCH_ENTRY_XSD, MATCH_ENTRY_XSL, MATCH_ENTRY_SVG, MATCH_ENTRY_DOTGIT, MATCH_ENTRY_DTD, MATCH_ENTRY_GIF, MATCH_ENTRY_JPG, MATCH_ENTRY_PNG, MATCH_ENTRY_TZ_DATA, MATCH_ENTRY_SQL, MATCH_ENTRY_DDL, MATCH_ENTRY_GROOVY, MATCH_ENTRY_VM, MATCH_ENTRY_FTL, MATCH_ENTRY_FTL, MATCH_ENTRY_HANDLERS, MATCH_ENTRY_RNC, MATCH_ENTRY_G, MATCH_ENTRY_TYPES, MATCH_ENTRY_EOT, MATCH_ENTRY_WOFF, MATCH_ENTRY_CERTSPEC, MATCH_ENTRY_TCL, MATCH_ENTRY_SH, MATCH_ENTRY_LICENSE, MATCH_ENTRY_NOTICE, MATCH_ENTRY_README); // NOSONAR
 
-	private UnpackHelper() {
-		// prevent instantiation of constructor
-	}
-
 	public static void unpackDirectoriesAndFiles(final File tempDir, final String[] nonCanonicalFilePaths, final String[] includes, final String[] excludes, final List<File> skippedFiles, final List<File> invalidFiles, final List<File> validFiles, final List<File> invalidArchives, final List<File> validArchives, final Set<String> duplicateFiles, final int level) throws Exception { // NOSONAR
 		try (final JulUtil x = new JulUtil(PACKAGE_NAME_COM_GITHUB_JUNRAR, Level.OFF)) {
 			for (final String nonCanonicalFilePath : nonCanonicalFilePaths) {
@@ -130,6 +127,12 @@ public class UnpackHelper {
 			REUSABLE_READ_BUFFER.remove();
 			REUSABLE_WRITE_BUFFER.remove();
 		}
+	}
+
+	// PRIVATE
+
+	private UnpackHelper() {
+		// prevent instantiation of constructor
 	}
 
 	private static void unpackDirectoryOrFile(final File tempDir, final File canonicalFileObj, final String[] includes, final String[] excludes, final List<File> skippedFiles, final List<File> invalidFiles, final List<File> validFiles, final List<File> invalidArchives, final List<File> validArchives, final Set<String> duplicateFiles, final int level) throws Exception { // NOSONAR
@@ -368,7 +371,7 @@ public class UnpackHelper {
 		}
 	}
 
-	public static boolean checkSignature(final byte[] expectedSignature, final byte[] actualSignature, final int actualSignatureBytes) {
+	private static boolean checkSignature(final byte[] expectedSignature, final byte[] actualSignature, final int actualSignatureBytes) {
 		if ((null == expectedSignature) || (null == actualSignature) || (actualSignatureBytes < expectedSignature.length) || (actualSignatureBytes > actualSignature.length)) {
 			return false;
 		}
