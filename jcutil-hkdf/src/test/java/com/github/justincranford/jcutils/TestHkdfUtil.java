@@ -1,7 +1,5 @@
 package com.github.justincranford.jcutils;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -19,8 +17,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Mandatory tests are provided using test vectors from RFC 5869.
