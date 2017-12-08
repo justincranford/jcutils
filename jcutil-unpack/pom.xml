@@ -15,6 +15,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.github.justincranford.jcutils</groupId>
+			<artifactId>jcutil-validation</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.justincranford.jcutils</groupId>
 			<artifactId>jcutil-string</artifactId>
 			<version>${project.version}</version>
 		</dependency>
