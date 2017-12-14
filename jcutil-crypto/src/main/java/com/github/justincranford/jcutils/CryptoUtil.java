@@ -25,6 +25,7 @@ import javax.xml.bind.DatatypeConverter;
 
 @SuppressWarnings("hiding") 
 public class CryptoUtil {
+	public static final String PROVIDER_BC           = "BC";
 	public static final String PROVIDER_SUNEC        = "SunEC";
 	public static final String PROVIDER_SUNRSASIGN   = "SunRsaSign";
 	public static final String KEYSTORE_TYPE_JKS     = "JKS";		// Type=JKS,     Provider=SunJCE?

@@ -226,6 +226,7 @@
 		<module>jcutil-hkdf</module>
 		<module>jcutil-pbkdf2</module>
 		<module>jcutil-proxy</module>
+		<module>jcutil-certdemo</module>
 		<module>jcutil-junit</module>
 	</modules>
 </project>
