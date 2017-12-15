@@ -52,7 +52,7 @@ public class TlsClient extends Thread {
 			try (final FileInputStream fis = new FileInputStream(this.tsFilePath)) {
 				ts.load(fis, this.tsPassword);
 			}
-			TrustManagerFactory tmf = TrustManagerFactory.getInstance(CertChainDemo.SUNX509, CertChainDemo.SUNJSSE);
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance(CertChainDemo.TRUSTMANAGER, CertChainDemo.SUNJSSE);
 	        tmf.init(ts);
 			final TrustManager[] trustManagers = tmf.getTrustManagers();
 //			trustManagers[0] = new X509TrustManagerAssertEKUs((X509TrustManager)trustManagers[0], null);	// Wrap first TrustManager with a delegator object to enforce mandatory EKUs

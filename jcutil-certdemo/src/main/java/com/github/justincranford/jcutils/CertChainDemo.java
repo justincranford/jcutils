@@ -65,9 +65,12 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 public class CertChainDemo {
 	private static final Logger LOG = Logger.getLogger(CertChainDemo.class.getName());
 
+	public static final String   UTF8                 = "UTF-8";
 	public static final String   SUNJCE               = "SunJCE";
 	public static final String   SUNJSSE              = "SunJSSE";
-	public static final String   SUNX509              = "SunX509";
+	public static final String   SUNX509              = "SunX509";	// X509ExtendedTrustManager => SimpleValidator.java. Sun-specific and compatibility use only. KeyStore only.
+	public static final String   PKIX                 = "PKIX";		// X509ExtendedTrustManager => PKIXValidator.java. Default and recommended. KeyStore or ManagerFactoryParameters.
+	public static final String   TRUSTMANAGER         = PKIX;		// SUNX509 basic validation without logging, PKIX more rigorous with protection, logging, and AKI=>SKI chain validation.
 	public static final String   TEMPDIR              = "target/test-generated-data/";
 	public static final String   EXAMPLE              = "example";
 	public static final String   COM                  = "com";
@@ -120,20 +123,17 @@ public class CertChainDemo {
 		final Future<KeyPair> akpIssuingClient1ByIssuingCa1 = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
 		final Future<KeyPair> akpIssuingServer2ByIssuingCa2 = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
 
-		final long             nowMillis      = System.currentTimeMillis();													// Milliseconds since Jan 1, 1970 @ 12:00am UTC
-		final Date             validNotBefore = new Date(nowMillis - 3600000L*24L + (secureRandom.nextLong() % 3600000L));	// NOW - 1 day + secureRandomom(-1..+1 hour)
-		final Date             validNotAfter  = new Date(nowMillis + 3600000L*24L*365L);									// NOW + 365 days
-		final KeyUsage         kuCa           = new KeyUsage(KeyUsage.keyCertSign);
-		final KeyUsage         kuEntity       = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.keyAgreement);	// TLS RSA keyEncipherment, TLS EC keyAgreement
-		final ExtendedKeyUsage ekuCa          = new ExtendedKeyUsage(new KeyPurposeId[]{KeyPurposeId.anyExtendedKeyUsage});
-		final ExtendedKeyUsage ekuClient      = new ExtendedKeyUsage(new KeyPurposeId[]{KeyPurposeId.id_kp_clientAuth});
-		final ExtendedKeyUsage ekuServer      = new ExtendedKeyUsage(new KeyPurposeId[]{KeyPurposeId.id_kp_serverAuth});
-		final char[]           KSPW           = new char[0];	// password for keystore
-		final char[]           KSAPW          = new char[0];	// password for private key entry in keystore
-		final char[]           TSPW           = new char[0];	// password for truststore
-//		final char[]           KSPW           = CertUtil.generateSerialNumber(secureRandom).toString().toCharArray();
-//		final char[]           KSAPW          = CertUtil.generateSerialNumber(secureRandom).toString().toCharArray();
-//		final char[]           TSPW           = CertUtil.generateSerialNumber(secureRandom).toString().toCharArray();
+		final long             nowMillis       = System.currentTimeMillis();													// Milliseconds since Jan 1, 1970 @ 12:00am UTC
+		final Date             validNotBefore  = new Date(nowMillis - 3600000L*24L + (secureRandom.nextLong() % 3600000L));	// NOW - 1 day + secureRandomom(-1..+1 hour)
+		final Date             validNotAfter   = new Date(nowMillis + 3600000L*24L*365L);									// NOW + 365 days
+		final KeyUsage         kuCa            = new KeyUsage(KeyUsage.keyCertSign);
+		final KeyUsage         kuEntity        = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.keyAgreement);	// TLS RSA keyEncipherment, TLS EC keyAgreement
+		final ExtendedKeyUsage ekuCa           = new ExtendedKeyUsage(new KeyPurposeId[]{KeyPurposeId.anyExtendedKeyUsage});
+		final ExtendedKeyUsage ekuClient       = new ExtendedKeyUsage(new KeyPurposeId[]{KeyPurposeId.id_kp_clientAuth});
+		final ExtendedKeyUsage ekuServer       = new ExtendedKeyUsage(new KeyPurposeId[]{KeyPurposeId.id_kp_serverAuth});
+		final char[]           KSPW            = CertUtil.generateSerialNumber(secureRandom).toString().toCharArray();			// password for keystore
+		final char[]           KSAPW           = KSPW;	// To Do: Add support different ksAliasPassword vs ksPassword.	// password for private key entry in keystore
+		final char[]           TSPW            = CertUtil.generateSerialNumber(secureRandom).toString().toCharArray();			// password for truststore
 
 		final HashMap<X500Name, HashSet<X509Certificate>> allCerts = new HashMap<>();	// Issuing CAs DNs not unique, they have main identity cert PLUS one or two cross-certs
 
@@ -311,6 +311,12 @@ public class CertChainDemo {
 		final KeyStore          tsIssuingServer2ByIssuingCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingServer2ByIssuingCa2, TSPW, trustIssuingServer2ByIssuingCa2);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGSERVER2 BY ISSUINGCA2", ksFileIssuingServer2ByIssuingCa2, KSPW, SERVER, KSAPW, tsFileIssuingServer2ByIssuingCa2, TSPW);
 
+		// To Do: Use SunX509/PKIX X509ExtendedTrustManager methods to validate chain?
+		// - checkClientTrusted(X509Certificate[] chain, String authType, Socket socket)	// authType="RSA"
+		// - checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine)	// authType="RSA"
+		// - checkServerTrusted(X509Certificate[] chain, String authType, Socket socket)	// authType="RSA"
+		// - checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine)	// authType="RSA"
+
 //		CertChainDemo.doTls12ClientServerExample(secureRandom, ksFileRootClient1ByRootCa1,       KSPW, SERVER, KSAPW, tsFileRootClient1ByRootCa1,       TSPW);	// WORKS
 		CertChainDemo.doTls12ClientServerExample(secureRandom, ksFileRootServer2ByRootCa2,       KSPW, SERVER, KSAPW, tsFileRootServer2ByRootCa2,       TSPW);	// WORKS
 //		CertChainDemo.doTls12ClientServerExample(secureRandom, ksFileSubClient1BySubCa1,         KSPW, SERVER, KSAPW, tsFileSubClient1BySubCa1,         TSPW);	// WORKS
@@ -346,28 +352,29 @@ public class CertChainDemo {
 	}
 
 	private static KeyStore saveKeyStore(final String ksProvider, final String ksType, final String ksFile, final char[] ksPassword, final String ksAlias, final char[] ksAliasPassword, final PrivateKey privateKey, final X509Certificate[] ksChain) throws Exception {
-		final KeyStore ks = KeyStore.getInstance(ksType, ksProvider);
-		ks.load(null, ksPassword);	// Create in-memory
-		ks.setKeyEntry(ksAlias, privateKey, ksAliasPassword, ksChain);	// unique alias (ex: "server")
-		try (FileOutputStream fos = new FileOutputStream(ksFile)) {
-			ks.store(fos, ksPassword);	// Save to disk
+		CertUtil.saveKeyStore(ksProvider, ksType, ksFile, ksPassword, ksChain, ksAlias, privateKey, ksAliasPassword);
+		try (FileOutputStream fos = new FileOutputStream(ksFile+".cmd")) {
+			fos.write(("ksProvider="+ksProvider+"\n").getBytes(UTF8));
+			fos.write(("ksType="+ksType+"\n").getBytes(UTF8));
+			fos.write(("ksFile="+ksFile+"\n").getBytes(UTF8));
+			fos.write(("ksPassword="+new String(ksPassword)+"\n").getBytes(UTF8));
+			fos.write(("ksAlias="+ksAlias+"\n").getBytes(UTF8));
+			fos.write(("ksAliasPassword="+new String(ksAliasPassword)+"\n").getBytes(UTF8));
+			fos.write(("C:\\jdk\\8-64\\bin\\keytool -list -v -alias "+ksAlias+" -keystore "+ksFile+" -storepass "+new String(ksPassword)+" -storetype "+ksType+" -providername "+ksProvider+"\n").getBytes(UTF8));
 		}
-		try (FileInputStream fis = new FileInputStream(ksFile)) {
-			ks.load(fis, ksPassword);	// Save to disk
-		}
-		return ks;
+		return CertUtil.loadKeyStore(ksProvider, ksType, ksFile, ksPassword);	// Re-read from disk to force validation of the settings before we use them later on
 	}
 
 	private static KeyStore saveTrustStore(final String tsProvider, final String tsType, final String tsFile, final char[] tsPassword, final X509Certificate[] tsCerts) throws Exception {	// NOSONAR
-		final KeyStore ts = KeyStore.getInstance(tsType, tsProvider);
-		ts.load(null, tsPassword);	// Create in-memory
-		for (int i=0; i<tsCerts.length; i++) {
-			ts.setCertificateEntry("ts"+i, tsCerts[0]);	// unique alias (ex: "ts0")
+		CertUtil.saveTrustStore(tsProvider, tsType, tsFile, tsPassword, tsCerts);
+		try (FileOutputStream fos = new FileOutputStream(tsFile+".cmd")) {
+			fos.write(("tsProvider="+tsProvider+"\n").getBytes(UTF8));
+			fos.write(("tsType="+tsType+"\n").getBytes(UTF8));
+			fos.write(("tsFile="+tsFile+"\n").getBytes(UTF8));
+			fos.write(("tsPassword="+new String(tsPassword)+"\n").getBytes(UTF8));
+			fos.write(("C:\\jdk\\8-64\\bin\\keytool -list -v -keystore "+tsFile+" -storepass "+new String(tsPassword)+" -storetype "+tsType+" -providername "+tsProvider+"\n").getBytes(UTF8));
 		}
-		try (FileOutputStream fos = new FileOutputStream(tsFile)) {
-			ts.store(fos, tsPassword);	// Save to disk
-		}
-		return ts;
+		return CertUtil.loadKeyStore(tsProvider, tsType, tsFile, tsPassword);	// Re-read from disk to force validation of the settings before we use them later on
 	}
 
 	private static void validateVerifyTrackPrint(final SecureRandom secureRandom, final HashMap<X500Name, HashSet<X509Certificate>> allCerts, final String description, final String ksFile, final char[] ksPassword, final String ksAlias, final char[] ksAliasPassword, final String tsFile, final char[] tsPassword) throws Exception {
@@ -381,7 +388,7 @@ public class CertChainDemo {
 		try {	// Verify private key matches first cert public key in the key chain
 			final Signature s = Signature.getInstance("SHA256withRSA");
 			s.initSign(subjectPrivateKey, secureRandom);
-			s.update(TEMPDIR.getBytes("UTF-8"));
+			s.update(TEMPDIR.getBytes(UTF8));
 			final byte[] signature = s.sign();
 			s.initVerify(subjectCert.getPublicKey());
 			s.verify(signature);
@@ -491,11 +498,12 @@ public class CertChainDemo {
 			if (null == issuerCaCert) {
 				final byte[] issuerSubjectKeyIdentifier = subjectKeyIdentifier.getKeyIdentifier();	// copy from subjectKeyIdentifier above
 		        certBuilder.addExtension(Extension.authorityKeyIdentifier, false, new AuthorityKeyIdentifier(issuerSubjectKeyIdentifier));	// isCritical=false
-			} else {
-				final byte[] issuerSubjectKeyIdentifier = issuerCaCert.getExtensionValue(Extension.subjectKeyIdentifier.getId());	// copy from issuer cert SKI (if exists)
-				if (null != issuerSubjectKeyIdentifier) {
-			        certBuilder.addExtension(Extension.authorityKeyIdentifier, false, new AuthorityKeyIdentifier(issuerSubjectKeyIdentifier));	// isCritical=false
-				}
+// To Do: Fix this. It breaks PKIX X509ExtendedTrustManager AKI=>SKI path validation in sun.security.validator.PKIXValidator, specifically sun.security.provider.certpath.PKIXCertPathValidator.
+//			} else {
+//				final byte[] issuerSubjectKeyIdentifier = issuerCaCert.getExtensionValue(Extension.subjectKeyIdentifier.getId());	// copy from issuer cert SKI (if exists)
+//				if (null != issuerSubjectKeyIdentifier) {
+//			        certBuilder.addExtension(Extension.authorityKeyIdentifier, false, new AuthorityKeyIdentifier(issuerSubjectKeyIdentifier));	// isCritical=false
+//				}
 			}
 		}
 		

@@ -1,19 +1,29 @@
 package com.github.justincranford.jcutils;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.cert.CertPathValidatorException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.PKIXCertPathValidatorResult;
+import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
@@ -22,6 +32,7 @@ import javax.security.auth.x500.X500Principal;
 
 @SuppressWarnings("unused")
 public class CertUtil {
+	private static final Logger     LOG                = Logger.getLogger(CertUtil.class.getName());
 	private static final int        INT_ONE_BILLION    = 1000000000;
 	private static final BigInteger BIGINT_TEN_BILLION = BigInteger.valueOf(10000000000L);
 
@@ -35,6 +46,28 @@ public class CertUtil {
 			ks.load(fis, ksPassword);
 		}
 		return ks;
+	}
+
+	public static KeyStore saveKeyStore(final String ksProvider, final String ksType, final String ksFile, final char[] ksPassword, final X509Certificate[] ksChain, final String ksAlias, final PrivateKey privateKey, final char[] ksAliasPassword) throws Exception {
+		final KeyStore ks = KeyStore.getInstance(ksType, ksProvider);
+		ks.load(null, ksPassword);	// Create in-memory
+		ks.setKeyEntry(ksAlias, privateKey, ksAliasPassword, ksChain);	// unique alias (ex: "server", "client", etc)
+		try (FileOutputStream fos = new FileOutputStream(ksFile)) {
+			ks.store(fos, ksPassword);	// Save to disk
+		}
+		return ks;
+	}
+
+	public static KeyStore saveTrustStore(final String tsProvider, final String tsType, final String tsFile, final char[] tsPassword, final X509Certificate[] tsCerts) throws Exception {	// NOSONAR
+		final KeyStore ts = KeyStore.getInstance(tsType, tsProvider);
+		ts.load(null, tsPassword);	// Create in-memory
+		for (int i=0; i<tsCerts.length; i++) {
+			ts.setCertificateEntry("ts"+i, tsCerts[0]);	// unique alias (ex: "ts0", "ts1", "ts2", etc)
+		}
+		try (FileOutputStream fos = new FileOutputStream(tsFile)) {
+			ts.store(fos, tsPassword);	// Save to disk
+		}
+		return ts;
 	}
 
 	public static X509Certificate[] getChainForAlias(final KeyStore ks, final String alias) throws KeyStoreException {
@@ -82,6 +115,9 @@ public class CertUtil {
 		throw new Exception("No trusted certs found in or after the chain");
 	}
 
+	// SunX509 => SimpleValidator.java. Sun-specific and compatibility use only. No logging. KeyStore only.
+	// PKIX    => PKIXValidator.java. Default and recommended. Logging. KeyStore or ManagerFactoryParameters.
+	// Note: PKIX is more rigorous with keystore protection, logging, and even AKI=>SKI chain validation.
 	public static void validateTrustedChain(final X509Certificate[] chain) throws Exception {
 		final Date now = new Date();
 		for (int i=0; i<chain.length; i++) {
