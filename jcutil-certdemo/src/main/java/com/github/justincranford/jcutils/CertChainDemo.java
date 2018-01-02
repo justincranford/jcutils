@@ -80,10 +80,10 @@ public class CertChainDemo {
 	public static final int      PORT                 = 8080;
 	public static final int      SOTIMEOUT            = 2500;
 	public static final String   SERVER               = "server";
-	public static final String   KSPROVIDER           = SUNJCE;
-	public static final String   KSTYPE               = "JCEKS";	// PKCS12, JCEKS, JKS, etc
+	public static final String   KSPROVIDER           = SUNJCE;		// PKCS12, JCEKS, JKS, PKCS11, etc
+	public static final String   KSTYPE               = "JCEKS";	// PKCS12/SUNJSSE, JCEKS/SUNJCE, JKS/SUNJCE, etc
 	public static final String   TSPROVIDER           = SUNJSSE;
-	public static final String   TSTYPE               = "PKCS12";	// PKCS12, JCEKS, JKS, etc
+	public static final String   TSTYPE               = "PKCS12";	// PKCS12/SUNJSSE, JCEKS/SUNJCE, JKS/SUNJCE, etc
 	public static final int      RSA_KEYLENGTH        = 2048;
 	public static final String   SIGALG_SHA256WITHRSA = "sha256WithRSAEncryption";
 	public static final String[] TLS_CIPHER_SUITES    = {"TLS_RSA_WITH_AES_128_CBC_SHA256"};	// NOSONAR Make this member "protected".
@@ -104,28 +104,23 @@ public class CertChainDemo {
 		final SecureRandom secureRandom = SecureRandom.getInstanceStrong();
 
 		// CAs
-		final Future<KeyPair> akpRootCa1ByRootCa1           = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpRootCa2ByRootCa2           = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpSubCa1ByRootCa1            = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpSubCa2ByRootCa2            = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpIssuingCa1ByIssuingCa1     = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpIssuingCa2ByIssuingCa2     = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		// Cross-certs within domain
-		final Future<KeyPair> akpIssuingCa1BySubCa1         = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpIssuingCa2BySubCa2         = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		// Cross-cert across domains
-		final Future<KeyPair> akpIssuingCa1BySubCa2         = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpRootCa1        = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpRootCa2        = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpSubCa1         = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpSubCa2         = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpIssuingCa1     = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpIssuingCa2     = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
 		// Entities
-		final Future<KeyPair> akpRootClient1ByRootCa1       = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpRootServer2ByRootCa2       = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpSubClient1BySubCa1         = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpSubServer2BySubCa2         = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpIssuingClient1ByIssuingCa1 = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
-		final Future<KeyPair> akpIssuingServer2ByIssuingCa2 = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpRootClient1    = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpRootServer2    = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpSubClient1     = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpSubServer2     = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpIssuingClient1 = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
+		final Future<KeyPair> akpIssuingServer2 = CryptoUtil.generateKeyPairAsync(EXECUTOR_SERVICE, secureRandom, CryptoUtil.PROVIDER_BC, CryptoUtil.KEYPAIR_RSA, RSA_KEYLENGTH);
 
-		final long             nowMillis       = System.currentTimeMillis();													// Milliseconds since Jan 1, 1970 @ 12:00am UTC
-		final Date             validNotBefore  = new Date(nowMillis - 3600000L*24L + (secureRandom.nextLong() % 3600000L));	// NOW - 1 day + secureRandomom(-1..+1 hour)
-		final Date             validNotAfter   = new Date(nowMillis + 3600000L*24L*365L);									// NOW + 365 days
+		final long             nowMillis       = System.currentTimeMillis();												// Milliseconds since Jan 1, 1970 @ 12:00am UTC
+		final Date             notBefore  = new Date(nowMillis - 3600000L*24L + (secureRandom.nextLong() % 3600000L));	// NOW - 1 day + secureRandomom(-1..+1 hour)
+		final Date             notAfter   = new Date(nowMillis + 3600000L*24L*365L);									// NOW + 365 days
 		final KeyUsage         kuCa            = new KeyUsage(KeyUsage.keyCertSign);
 		final KeyUsage         kuEntity        = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.keyAgreement);	// TLS RSA keyEncipherment, TLS EC keyAgreement
 		final ExtendedKeyUsage ekuCa           = new ExtendedKeyUsage(new KeyPurposeId[]{KeyPurposeId.anyExtendedKeyUsage});
@@ -139,175 +134,178 @@ public class CertChainDemo {
 
 		FileUtil.makeCanonicalDirectories(TEMPDIR);
 
-		// CAs
-		final KeyPair           kpRootCa1ByRootCa1     = akpRootCa1ByRootCa1.get();
-		final X500Name          nameRootCa1ByRootCa1   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "rootca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
-		final X509Certificate   certRootCa1ByRootCa1   = CertChainDemo.signRootCaCert(secureRandom, validNotBefore, validNotAfter, nameRootCa1ByRootCa1, null, kuCa, ekuCa, kpRootCa1ByRootCa1, SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainRootCa1ByRootCa1  = new X509Certificate[]{certRootCa1ByRootCa1};	// NOSONAR
-		final X509Certificate[] trustRootCa1ByRootCa1  = new X509Certificate[]{certRootCa1ByRootCa1};	// NOSONAR
+		// Self-signed cert for root CA 1, only used for signing the subordinate CA 1
+		final X500Name          nameRootCa1            = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "rootca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final KeyPair           kpRootCa1              = akpRootCa1.get();
+		final X509Certificate   certRootCa1ByRootCa1   = CertChainDemo.signRootCaCert(secureRandom, notBefore, notAfter, nameRootCa1, null, kuCa, ekuCa, kpRootCa1, SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainRootCa1ByRootCa1  = CertUtil.toArray(certRootCa1ByRootCa1);
+		final X509Certificate[] trustRootCa1ByRootCa1  = CertUtil.toArray(certRootCa1ByRootCa1);
 		final String            ksFileRootCa1ByRootCa1 = TEMPDIR + "ksRootCa1ByRootCa1." + KSTYPE;
 		final String            tsFileRootCa1ByRootCa1 = TEMPDIR + "tsRootCa1ByRootCa1." + TSTYPE;
-		final KeyStore          ksRootCa1ByRootCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileRootCa1ByRootCa1, KSPW, SERVER, KSAPW, kpRootCa1ByRootCa1.getPrivate(), chainRootCa1ByRootCa1);	// NOSONAR
+		final KeyStore          ksRootCa1ByRootCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileRootCa1ByRootCa1, KSPW, SERVER, KSAPW, kpRootCa1.getPrivate(), chainRootCa1ByRootCa1);	// NOSONAR
 		final KeyStore          tsRootCa1ByRootCa1     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileRootCa1ByRootCa1, TSPW, trustRootCa1ByRootCa1);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ROOTCA1 BY ROOTCA1", ksFileRootCa1ByRootCa1, KSPW, SERVER, KSAPW, tsFileRootCa1ByRootCa1, TSPW);
 
-		final KeyPair           kpRootCa2ByRootCa2     = akpRootCa2ByRootCa2.get();
-		final X500Name          nameRootCa2ByRootCa2   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "rootca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
-		final X509Certificate   certRootCa2ByRootCa2   = CertChainDemo.signRootCaCert(secureRandom, validNotBefore, validNotAfter, nameRootCa2ByRootCa2, null, kuCa, ekuCa, kpRootCa2ByRootCa2, SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainRootCa2ByRootCa2  = new X509Certificate[]{certRootCa2ByRootCa2};	// NOSONAR
-		final X509Certificate[] trustRootCa2ByRootCa2  = new X509Certificate[]{certRootCa2ByRootCa2};	// NOSONAR
+		// Self-signed cert for root CA 2, only used for signing the subordinate CA 2
+		final X500Name          nameRootCa2            = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "rootca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final KeyPair           kpRootCa2              = akpRootCa2.get();
+		final X509Certificate   certRootCa2ByRootCa2   = CertChainDemo.signRootCaCert(secureRandom, notBefore, notAfter, nameRootCa2, null, kuCa, ekuCa, kpRootCa2, SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainRootCa2ByRootCa2  = CertUtil.toArray(certRootCa2ByRootCa2);
+		final X509Certificate[] trustRootCa2ByRootCa2  = CertUtil.toArray(certRootCa2ByRootCa2);
 		final String            ksFileRootCa2ByRootCa2 = TEMPDIR + "ksRootCa2ByRootCa2." + KSTYPE;
 		final String            tsFileRootCa2ByRootCa2 = TEMPDIR + "tsRootCa2ByRootCa2." + TSTYPE;
-		final KeyStore          ksRootCa2ByRootCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileRootCa2ByRootCa2, KSPW, SERVER, KSAPW, kpRootCa2ByRootCa2.getPrivate(), chainRootCa2ByRootCa2);	// NOSONAR
+		final KeyStore          ksRootCa2ByRootCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileRootCa2ByRootCa2, KSPW, SERVER, KSAPW, kpRootCa2.getPrivate(), chainRootCa2ByRootCa2);	// NOSONAR
 		final KeyStore          tsRootCa2ByRootCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileRootCa2ByRootCa2, TSPW, trustRootCa2ByRootCa2);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ROOTCA2 BY ROOTCA2", ksFileRootCa2ByRootCa2, KSPW, SERVER, KSAPW, tsFileRootCa2ByRootCa2, TSPW);
 
-		final KeyPair           kpSubCa1ByRootCa1     = akpSubCa1ByRootCa1.get();
-		final X500Name          nameSubCa1ByRootCa1   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "subca1").addRDN(BCStyle.DC, "rootca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
-		final X509Certificate   certSubCa1ByRootCa1   = CertChainDemo.signSubCaCert(secureRandom, validNotBefore, validNotAfter, nameSubCa1ByRootCa1, null, kuCa, ekuCa, kpSubCa1ByRootCa1, certRootCa1ByRootCa1, kpRootCa1ByRootCa1.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainSubCa1ByRootCa1  = new X509Certificate[]{certSubCa1ByRootCa1, certRootCa1ByRootCa1};	// NOSONAR
-		final X509Certificate[] trustSubCa1ByRootCa1  = new X509Certificate[]{certSubCa1ByRootCa1, certRootCa1ByRootCa1};	// NOSONAR
+		// Subordinate CA 1, signed by the root CA 1, used for cross-certifying issuing CA 1
+		final X500Name          nameSubCa1            = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "subca1").addRDN(BCStyle.DC, "rootca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final KeyPair           kpSubCa1              = akpSubCa1.get();
+		final X509Certificate   certSubCa1ByRootCa1   = CertChainDemo.signSubCaCert(secureRandom, notBefore, notAfter, nameSubCa1, null, kuCa, ekuCa, kpSubCa1, certRootCa1ByRootCa1, kpRootCa1.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainSubCa1ByRootCa1  = CertUtil.toArray(certSubCa1ByRootCa1, certRootCa1ByRootCa1);
+		final X509Certificate[] trustSubCa1ByRootCa1  = CertUtil.toArray(trustRootCa1ByRootCa1);
 		final String            ksFileSubCa1ByRootCa1 = TEMPDIR + "ksSubCa1ByRootCa1." + KSTYPE;
 		final String            tsFileSubCa1ByRootCa1 = TEMPDIR + "tsSubCa1ByRootCa1." + TSTYPE;
-		final KeyStore          ksSubCa1ByRootCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileSubCa1ByRootCa1, KSPW, SERVER, KSAPW, kpSubCa1ByRootCa1.getPrivate(), chainSubCa1ByRootCa1);	// NOSONAR
+		final KeyStore          ksSubCa1ByRootCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileSubCa1ByRootCa1, KSPW, SERVER, KSAPW, kpSubCa1.getPrivate(), chainSubCa1ByRootCa1);	// NOSONAR
 		final KeyStore          tsSubCa1ByRootCa1     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileSubCa1ByRootCa1, TSPW, trustSubCa1ByRootCa1);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "SUBCA1 BY ROOTCA1", ksFileSubCa1ByRootCa1, KSPW, SERVER, KSAPW, tsFileSubCa1ByRootCa1, TSPW);
 
-		final KeyPair           kpSubCa2ByRootCa2     = akpSubCa2ByRootCa2.get();
-		final X500Name          nameSubCa2ByRootCa2   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "subca2").addRDN(BCStyle.DC, "rootca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
-		final X509Certificate   certSubCa2ByRootCa2   = CertChainDemo.signSubCaCert(secureRandom, validNotBefore, validNotAfter, nameSubCa2ByRootCa2, null, kuCa, ekuCa, kpSubCa2ByRootCa2, certRootCa2ByRootCa2, kpRootCa2ByRootCa2.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainSubCa2ByRootCa2  = new X509Certificate[]{certSubCa2ByRootCa2, certRootCa2ByRootCa2};	// NOSONAR
-		final X509Certificate[] trustSubCa2ByRootCa2  = new X509Certificate[]{certSubCa2ByRootCa2, certRootCa2ByRootCa2};	// NOSONAR
+		// Subordinate CA 2, signed by the root CA 2, used for cross-certifying issuing CA 2 and also for cross-certifying issuing CA 1 (i.e. establish trust to a different customer's issuing CA 1)
+		final X500Name          nameSubCa2            = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "subca2").addRDN(BCStyle.DC, "rootca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final KeyPair           kpSubCa2              = akpSubCa2.get();
+		final X509Certificate   certSubCa2ByRootCa2   = CertChainDemo.signSubCaCert(secureRandom, notBefore, notAfter, nameSubCa2, null, kuCa, ekuCa, kpSubCa2, certRootCa2ByRootCa2, kpRootCa2.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainSubCa2ByRootCa2  = CertUtil.toArray(certSubCa2ByRootCa2, certRootCa2ByRootCa2);
+		final X509Certificate[] trustSubCa2ByRootCa2  = CertUtil.toArray(trustRootCa2ByRootCa2);
 		final String            ksFileSubCa2ByRootCa2 = TEMPDIR + "ksSubCa2ByRootCa2." + KSTYPE;
 		final String            tsFileSubCa2ByRootCa2 = TEMPDIR + "tsSubCa2ByRootCa2." + TSTYPE;
-		final KeyStore          ksSubCa2ByRootCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileSubCa2ByRootCa2, KSPW, SERVER, KSAPW, kpSubCa2ByRootCa2.getPrivate(), chainSubCa2ByRootCa2);	// NOSONAR
+		final KeyStore          ksSubCa2ByRootCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileSubCa2ByRootCa2, KSPW, SERVER, KSAPW, kpSubCa2.getPrivate(), chainSubCa2ByRootCa2);	// NOSONAR
 		final KeyStore          tsSubCa2ByRootCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileSubCa2ByRootCa2, TSPW, trustSubCa2ByRootCa2);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "SUBCA2 BY ROOTCA2", ksFileSubCa2ByRootCa2, KSPW, SERVER, KSAPW, tsFileSubCa2ByRootCa2, TSPW);
 
-		final KeyPair           kpIssuingCa1ByIssuingCa1     = akpIssuingCa1ByIssuingCa1.get();
-		final X500Name          nameIssuingCa1ByIssuingCa1   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "issuingca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
-		final X509Certificate   certIssuingCa1ByIssuingCa1   = CertChainDemo.signRootCaCert(secureRandom, validNotBefore, validNotAfter, nameIssuingCa1ByIssuingCa1, null, kuCa, ekuCa, kpIssuingCa1ByIssuingCa1, SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainIssuingCa1ByIssuingCa1  = new X509Certificate[]{certIssuingCa1ByIssuingCa1};	// NOSONAR
-		final X509Certificate[] trustIssuingCa1ByIssuingCa1  = new X509Certificate[]{certIssuingCa1ByIssuingCa1};	// NOSONAR
+		// Self-signed cert for issuing CA 1, the main CA for issuing end entity identities for customer 1
+		final X500Name          nameIssuingCa1               = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "issuingca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final KeyPair           kpIssuingCa1                 = akpIssuingCa1.get();
+		final X509Certificate   certIssuingCa1ByIssuingCa1   = CertChainDemo.signRootCaCert(secureRandom, notBefore, notAfter, nameIssuingCa1, null, kuCa, ekuCa, kpIssuingCa1, SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainIssuingCa1ByIssuingCa1  = CertUtil.toArray(certIssuingCa1ByIssuingCa1);	// NOSONAR
+		final X509Certificate[] trustIssuingCa1ByIssuingCa1  = CertUtil.toArray(certIssuingCa1ByIssuingCa1);	// NOSONAR
 		final String            ksFileIssuingCa1ByIssuingCa1 = TEMPDIR + "ksIssuingCa1ByIssuingCa1." + KSTYPE;
 		final String            tsFileIssuingCa1ByIssuingCa1 = TEMPDIR + "tsIssuingCa1ByIssuingCa1." + TSTYPE;
-		final KeyStore          ksIssuingCa1ByIssuingCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa1ByIssuingCa1, KSPW, SERVER, KSAPW, kpIssuingCa1ByIssuingCa1.getPrivate(), chainIssuingCa1ByIssuingCa1);	// NOSONAR
+		final KeyStore          ksIssuingCa1ByIssuingCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa1ByIssuingCa1, KSPW, SERVER, KSAPW, kpIssuingCa1.getPrivate(), chainIssuingCa1ByIssuingCa1);	// NOSONAR
 		final KeyStore          tsIssuingCa1ByIssuingCa1     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingCa1ByIssuingCa1, TSPW, trustIssuingCa1ByIssuingCa1);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGCA1 BY ISSUINGCA1", ksFileIssuingCa1ByIssuingCa1, KSPW, SERVER, KSAPW, tsFileIssuingCa1ByIssuingCa1, TSPW);
 
-		final KeyPair           kpIssuingCa2ByIssuingCa2     = akpIssuingCa2ByIssuingCa2.get();
-		final X500Name          nameIssuingCa2ByIssuingCa2   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "issuingca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
-		final X509Certificate   certIssuingCa2ByIssuingCa2   = CertChainDemo.signRootCaCert(secureRandom, validNotBefore, validNotAfter, nameIssuingCa2ByIssuingCa2, null, kuCa, ekuCa, kpIssuingCa2ByIssuingCa2, SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainIssuingCa2ByIssuingCa2  = new X509Certificate[]{certIssuingCa2ByIssuingCa2};	// NOSONAR
-		final X509Certificate[] trustIssuingCa2ByIssuingCa2  = new X509Certificate[]{certIssuingCa2ByIssuingCa2};	// NOSONAR
-		final String            ksFileIssuingCa2ByIssuingCa2 = TEMPDIR + "ksIssuingCa2ByIssuingCa2." + KSTYPE;
-		final String            tsFileIssuingCa2ByIssuingCa2 = TEMPDIR + "tsIssuingCa2ByIssuingCa2." + TSTYPE;
-		final KeyStore          ksIssuingCa2ByIssuingCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa2ByIssuingCa2, KSPW, SERVER, KSAPW, kpIssuingCa2ByIssuingCa2.getPrivate(), chainIssuingCa2ByIssuingCa2);	// NOSONAR
-		final KeyStore          tsIssuingCa2ByIssuingCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingCa2ByIssuingCa2, TSPW, trustIssuingCa2ByIssuingCa2);	// NOSONAR
-		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGCA2 BY ISSUINGCA2", ksFileIssuingCa2ByIssuingCa2, KSPW, SERVER, KSAPW, tsFileIssuingCa2ByIssuingCa2, TSPW);
-
-		// Cross-certs within domain
-		final KeyPair           kpIssuingCa1BySubCa1     = akpIssuingCa1BySubCa1.get();
-		final X509Certificate   certIssuingCa1BySubCa1   = CertChainDemo.signCrossCaCert(secureRandom, validNotBefore, validNotAfter, nameIssuingCa1ByIssuingCa1, kuCa, ekuCa, kpIssuingCa1BySubCa1.getPublic(), certSubCa1ByRootCa1, kpSubCa1ByRootCa1.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainIssuingCa1BySubCa1  = new X509Certificate[]{certIssuingCa1BySubCa1, certSubCa1ByRootCa1, certRootCa1ByRootCa1};	// NOSONAR
-		final X509Certificate[] trustIssuingCa1BySubCa1  = new X509Certificate[]{certIssuingCa1BySubCa1, certSubCa1ByRootCa1, certRootCa1ByRootCa1};	// NOSONAR
+		// Cross-certs within customer 1 domains (Reuse the subject DN & Public Key of the issuing CA 1, sign them with the private key of the sub CA 1, so trust is established within customer 1 domain)
+		final X509Certificate   certIssuingCa1BySubCa1   = CertChainDemo.signCrossCaCert(secureRandom, notBefore, notAfter, nameIssuingCa1, kuCa, ekuCa, kpIssuingCa1.getPublic(), certSubCa1ByRootCa1, kpSubCa1.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainIssuingCa1BySubCa1  = CertUtil.toArray(certIssuingCa1BySubCa1, certSubCa1ByRootCa1);
+		final X509Certificate[] trustIssuingCa1BySubCa1  = CertUtil.toArray(certSubCa1ByRootCa1);
 		final String            ksFileIssuingCa1BySubCa1 = TEMPDIR + "ksIssuingCa1BySubCa1." + KSTYPE;
 		final String            tsFileIssuingCa1BySubCa1 = TEMPDIR + "tsIssuingCa1BySubCa1." + TSTYPE;
-		final KeyStore          ksIssuingCa1BySubCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa1BySubCa1, KSPW, SERVER, KSAPW, kpIssuingCa1BySubCa1.getPrivate(), trustIssuingCa1BySubCa1);	// NOSONAR
+		final KeyStore          ksIssuingCa1BySubCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa1BySubCa1, KSPW, SERVER, KSAPW, kpIssuingCa1.getPrivate(), chainIssuingCa1BySubCa1);	// NOSONAR
 		final KeyStore          tsIssuingCa1BySubCa1     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingCa1BySubCa1, TSPW, trustIssuingCa1BySubCa1);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGCA1 BY SUBCA1 (CROSS)", ksFileIssuingCa1BySubCa1, KSPW, SERVER, KSAPW, tsFileIssuingCa1BySubCa1, TSPW);
 
-		final KeyPair           kpIssuingCa2BySubCa2     = akpIssuingCa2BySubCa2.get();
-		final X509Certificate   certIssuingCa2BySubCa2   = CertChainDemo.signCrossCaCert(secureRandom, validNotBefore, validNotAfter, nameIssuingCa2ByIssuingCa2, kuCa, ekuCa, kpIssuingCa2BySubCa2.getPublic(), certSubCa2ByRootCa2, kpSubCa2ByRootCa2.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainIssuingCa2BySubCa2  = new X509Certificate[]{certIssuingCa2BySubCa2, certSubCa2ByRootCa2, certRootCa2ByRootCa2};	// NOSONAR
-		final X509Certificate[] trustIssuingCa2BySubCa2  = new X509Certificate[]{certIssuingCa2BySubCa2, certSubCa2ByRootCa2, certRootCa2ByRootCa2};	// NOSONAR
+		// Self-signed cert for issuing CA 2, the main CA for issuing end entity identities for customer 2
+		final X500Name          nameIssuingCa2               = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.DC, "issuingca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final KeyPair           kpIssuingCa2                 = akpIssuingCa2.get();
+		final X509Certificate   certIssuingCa2ByIssuingCa2   = CertChainDemo.signRootCaCert(secureRandom, notBefore, notAfter, nameIssuingCa2, null, kuCa, ekuCa, kpIssuingCa2, SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainIssuingCa2ByIssuingCa2  = CertUtil.toArray(certIssuingCa2ByIssuingCa2);	// NOSONAR
+		final X509Certificate[] trustIssuingCa2ByIssuingCa2  = CertUtil.toArray(certIssuingCa2ByIssuingCa2);	// NOSONAR
+		final String            ksFileIssuingCa2ByIssuingCa2 = TEMPDIR + "ksIssuingCa2ByIssuingCa2." + KSTYPE;
+		final String            tsFileIssuingCa2ByIssuingCa2 = TEMPDIR + "tsIssuingCa2ByIssuingCa2." + TSTYPE;
+		final KeyStore          ksIssuingCa2ByIssuingCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa2ByIssuingCa2, KSPW, SERVER, KSAPW, kpIssuingCa2.getPrivate(), chainIssuingCa2ByIssuingCa2);	// NOSONAR
+		final KeyStore          tsIssuingCa2ByIssuingCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingCa2ByIssuingCa2, TSPW, trustIssuingCa2ByIssuingCa2);	// NOSONAR
+		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGCA2 BY ISSUINGCA2", ksFileIssuingCa2ByIssuingCa2, KSPW, SERVER, KSAPW, tsFileIssuingCa2ByIssuingCa2, TSPW);
+
+		// Cross-certs within customer 2 domains (Reuse the subject DN & Public Key of the issuing CA 2, sign them with the private key of the sub CA 2, so trust is established within customer 2 domain)
+		final X509Certificate   certIssuingCa2BySubCa2   = CertChainDemo.signCrossCaCert(secureRandom, notBefore, notAfter, nameIssuingCa2, kuCa, ekuCa, kpIssuingCa2.getPublic(), certSubCa2ByRootCa2, kpSubCa2.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainIssuingCa2BySubCa2  = CertUtil.toArray(certIssuingCa2BySubCa2, certSubCa2ByRootCa2);
+		final X509Certificate[] trustIssuingCa2BySubCa2  = CertUtil.toArray(certSubCa2ByRootCa2);
 		final String            ksFileIssuingCa2BySubCa2 = TEMPDIR + "ksIssuingCa2BySubCa2." + KSTYPE;
 		final String            tsFileIssuingCa2BySubCa2 = TEMPDIR + "tsIssuingCa2BySubCa2." + TSTYPE;
-		final KeyStore          ksIssuingCa2BySubCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa2BySubCa2, KSPW, SERVER, KSAPW, kpIssuingCa2BySubCa2.getPrivate(), trustIssuingCa2BySubCa2);	// NOSONAR
+		final KeyStore          ksIssuingCa2BySubCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa2BySubCa2, KSPW, SERVER, KSAPW, kpIssuingCa2.getPrivate(), chainIssuingCa2BySubCa2);	// NOSONAR
 		final KeyStore          tsIssuingCa2BySubCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingCa2BySubCa2, TSPW, trustIssuingCa2BySubCa2);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGCA2 BY SUBCA2 (CROSS)", ksFileIssuingCa2BySubCa2, KSPW, SERVER, KSAPW, tsFileIssuingCa2BySubCa2, TSPW);
 
-		// Cross-cert across domains
-		final KeyPair           kpIssuingCa1BySubCa2     = akpIssuingCa1BySubCa2.get();
-		final X509Certificate   certIssuingCa1BySubCa2   = CertChainDemo.signCrossCaCert(secureRandom, validNotBefore, validNotAfter, nameIssuingCa1ByIssuingCa1, kuCa, ekuCa, kpIssuingCa1BySubCa2.getPublic(), certSubCa2ByRootCa2, kpSubCa2ByRootCa2.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainIssuingCa1BySubCa2  = new X509Certificate[]{certIssuingCa1BySubCa2, certSubCa2ByRootCa2, certRootCa2ByRootCa2};	// NOSONAR
-		final X509Certificate[] trustIssuingCa1BySubCa2  = new X509Certificate[]{certRootCa2ByRootCa2};	// NOSONAR
+		// Cross-cert between customer 1 & 2 domains (Reuse the subject DN & Public Key of the issuing CA 1, sign them with the private key of the sub CA 2, so trust is established by customer 2 domain for the customer 1 domain)
+		final X509Certificate   certIssuingCa1BySubCa2   = CertChainDemo.signCrossCaCert(secureRandom, notBefore, notAfter, nameIssuingCa1, kuCa, ekuCa, kpIssuingCa1.getPublic(), certSubCa2ByRootCa2, kpSubCa2.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainIssuingCa1BySubCa2  = CertUtil.toArray(certIssuingCa1BySubCa2, certSubCa2ByRootCa2);
+		final X509Certificate[] trustIssuingCa1BySubCa2  = CertUtil.toArray(certSubCa2ByRootCa2);
 		final String            ksFileIssuingCa1BySubCa2 = TEMPDIR + "ksIssuingCa1BySubCa2." + KSTYPE;
 		final String            tsFileIssuingCa1BySubCa2 = TEMPDIR + "tsIssuingCa1BySubCa2." + TSTYPE;
-		final KeyStore          ksIssuingCa1BySubCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa1BySubCa2, KSPW, SERVER, KSAPW, kpIssuingCa1BySubCa2.getPrivate(), trustIssuingCa1BySubCa2);	// NOSONAR
+		final KeyStore          ksIssuingCa1BySubCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingCa1BySubCa2, KSPW, SERVER, KSAPW, kpIssuingCa1.getPrivate(), chainIssuingCa1BySubCa2);	// NOSONAR
 		final KeyStore          tsIssuingCa1BySubCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingCa1BySubCa2, TSPW, trustIssuingCa1BySubCa2);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGCA1 BY SUBCA2 (CROSS)", ksFileIssuingCa1BySubCa2, KSPW, SERVER, KSAPW, tsFileIssuingCa1BySubCa2, TSPW);
 
 		// Clients & Servers
-		final KeyPair           kpRootClient1ByRootCa1     = akpRootClient1ByRootCa1.get();
-		final X500Name          nameRootClient1ByRootCa1   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, CLIENT).addRDN(BCStyle.DC, "rootca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final X500Name          nameRootClient1            = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, CLIENT).addRDN(BCStyle.DC, "rootca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
 		final GeneralNames      sanRootClient1ByRootCa1    = new GeneralNames(new GeneralName(GeneralName.rfc822Name, "rootclient1@rootca1.example.com"));
-		final X509Certificate   certRootClient1ByRootCa1   = CertChainDemo.signSubEntityCert(secureRandom, validNotBefore, validNotAfter, nameRootClient1ByRootCa1, sanRootClient1ByRootCa1, kuEntity, ekuClient, kpRootClient1ByRootCa1, certRootCa1ByRootCa1, kpRootCa1ByRootCa1.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainRootClient1ByRootCa1  = new X509Certificate[]{certRootClient1ByRootCa1, certRootCa1ByRootCa1};
-		final X509Certificate[] trustRootClient1ByRootCa1  = new X509Certificate[]{certRootCa1ByRootCa1};
+		final KeyPair           kpRootClient1              = akpRootClient1.get();
+		final X509Certificate   certRootClient1ByRootCa1   = CertChainDemo.signSubEntityCert(secureRandom, notBefore, notAfter, nameRootClient1, sanRootClient1ByRootCa1, kuEntity, ekuClient, kpRootClient1, certRootCa1ByRootCa1, kpRootCa1.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainRootClient1ByRootCa1  = CertUtil.toArray(certRootClient1ByRootCa1, certRootCa1ByRootCa1);
+		final X509Certificate[] trustRootClient1ByRootCa1  = CertUtil.toArray(trustRootCa1ByRootCa1);
 		final String            ksFileRootClient1ByRootCa1 = TEMPDIR + "ksRootClient1ByRootCa1." + KSTYPE;
 		final String            tsFileRootClient1ByRootCa1 = TEMPDIR + "tsRootClient1ByRootCa1." + TSTYPE;
-		final KeyStore          ksRootClient1ByRootCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileRootClient1ByRootCa1, KSPW, SERVER, KSAPW, kpRootClient1ByRootCa1.getPrivate(), chainRootClient1ByRootCa1);	// NOSONAR
+		final KeyStore          ksRootClient1ByRootCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileRootClient1ByRootCa1, KSPW, SERVER, KSAPW, kpRootClient1.getPrivate(), chainRootClient1ByRootCa1);	// NOSONAR
 		final KeyStore          tsRootClient1ByRootCa1     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileRootClient1ByRootCa1, TSPW, trustRootClient1ByRootCa1);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ROOTCLIENT1 BY ROOTCA1", ksFileRootClient1ByRootCa1, KSPW, SERVER, KSAPW, tsFileRootClient1ByRootCa1, TSPW);
 
-		final KeyPair           kpRootServer2ByRootCa2     = akpRootServer2ByRootCa2.get();
-		final X500Name          nameRootServer2ByRootCa2   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, HOSTNAME_LOCALHOST).addRDN(BCStyle.DC, "rootca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final X500Name          nameRootServer2            = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, HOSTNAME_LOCALHOST).addRDN(BCStyle.DC, "rootca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
 		final GeneralNames      sanRootServer2ByRootCa2    = new GeneralNames(new GeneralName[]{new GeneralName(GeneralName.rfc822Name, "rootserver2@rootca2.example.com"),new GeneralName(GeneralName.dNSName, HOSTNAME_LOCALHOST),new GeneralName(GeneralName.iPAddress, IP_127_0_0_1)});
-		final X509Certificate   certRootServer2ByRootCa2   = CertChainDemo.signSubEntityCert(secureRandom, validNotBefore, validNotAfter, nameRootServer2ByRootCa2, sanRootServer2ByRootCa2, kuEntity, ekuServer, kpRootServer2ByRootCa2, certRootCa2ByRootCa2, kpRootCa2ByRootCa2.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainRootServer2ByRootCa2  = new X509Certificate[]{certRootServer2ByRootCa2, certRootCa2ByRootCa2};
-		final X509Certificate[] trustRootServer2ByRootCa2  = new X509Certificate[]{certRootCa2ByRootCa2};
+		final KeyPair           kpRootServer2              = akpRootServer2.get();
+		final X509Certificate   certRootServer2ByRootCa2   = CertChainDemo.signSubEntityCert(secureRandom, notBefore, notAfter, nameRootServer2, sanRootServer2ByRootCa2, kuEntity, ekuServer, kpRootServer2, certRootCa2ByRootCa2, kpRootCa2.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainRootServer2ByRootCa2  = CertUtil.toArray(certRootServer2ByRootCa2, certRootCa2ByRootCa2);
+		final X509Certificate[] trustRootServer2ByRootCa2  = CertUtil.toArray(trustRootCa2ByRootCa2);
 		final String            ksFileRootServer2ByRootCa2 = TEMPDIR + "ksRootServer2ByRootCa2." + KSTYPE;
 		final String            tsFileRootServer2ByRootCa2 = TEMPDIR + "tsRootServer2ByRootCa2." + TSTYPE;
-		final KeyStore          ksRootServer2ByRootCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileRootServer2ByRootCa2, KSPW, SERVER, KSAPW, kpRootServer2ByRootCa2.getPrivate(), chainRootServer2ByRootCa2);	// NOSONAR
+		final KeyStore          ksRootServer2ByRootCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileRootServer2ByRootCa2, KSPW, SERVER, KSAPW, kpRootServer2.getPrivate(), chainRootServer2ByRootCa2);	// NOSONAR
 		final KeyStore          tsRootServer2ByRootCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileRootServer2ByRootCa2, TSPW, trustRootServer2ByRootCa2);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ROOTSERVER2 BY ROOTCA2", ksFileRootServer2ByRootCa2, KSPW, SERVER, KSAPW, tsFileRootServer2ByRootCa2, TSPW);
 
-		final KeyPair           kpSubClient1BySubCa1     = akpSubClient1BySubCa1.get();
-		final X500Name          nameSubClient1BySubCa1   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, CLIENT).addRDN(BCStyle.DC, "subca1").addRDN(BCStyle.DC, "rootca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final X500Name          nameSubClient1           = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, CLIENT).addRDN(BCStyle.DC, "subca1").addRDN(BCStyle.DC, "rootca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
 		final GeneralNames      sanSubClient1BySubCa1    = new GeneralNames(new GeneralName(GeneralName.rfc822Name, "subclient1@subca1.rootca1.example.com"));
-		final X509Certificate   certSubClient1BySubCa1   = CertChainDemo.signSubEntityCert(secureRandom, validNotBefore, validNotAfter, nameSubClient1BySubCa1, sanSubClient1BySubCa1, kuEntity, ekuClient, kpSubClient1BySubCa1, certSubCa1ByRootCa1, kpSubCa1ByRootCa1.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainSubClient1BySubCa1  = new X509Certificate[]{certSubClient1BySubCa1, certSubCa1ByRootCa1, certRootCa1ByRootCa1};
-		final X509Certificate[] trustSubClient1BySubCa1  = new X509Certificate[]{certSubCa1ByRootCa1, certRootCa1ByRootCa1};
+		final KeyPair           kpSubClient1             = akpSubClient1.get();
+		final X509Certificate   certSubClient1BySubCa1   = CertChainDemo.signSubEntityCert(secureRandom, notBefore, notAfter, nameSubClient1, sanSubClient1BySubCa1, kuEntity, ekuClient, kpSubClient1, certSubCa1ByRootCa1, kpSubCa1.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainSubClient1BySubCa1  = CertUtil.toArray(certSubClient1BySubCa1, certSubCa1ByRootCa1, certRootCa1ByRootCa1);
+		final X509Certificate[] trustSubClient1BySubCa1  = CertUtil.toArray(trustRootCa1ByRootCa1);
 		final String            ksFileSubClient1BySubCa1 = TEMPDIR + "ksSubClient1BySubCa1." + KSTYPE;
 		final String            tsFileSubClient1BySubCa1 = TEMPDIR + "tsSubClient1BySubCa1." + TSTYPE;
-		final KeyStore          ksSubClient1BySubCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileSubClient1BySubCa1, KSPW, SERVER, KSAPW, kpSubClient1BySubCa1.getPrivate(), chainSubClient1BySubCa1);	// NOSONAR
+		final KeyStore          ksSubClient1BySubCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileSubClient1BySubCa1, KSPW, SERVER, KSAPW, kpSubClient1.getPrivate(), chainSubClient1BySubCa1);	// NOSONAR
 		final KeyStore          tsSubClient1BySubCa1     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileSubClient1BySubCa1, TSPW, trustSubClient1BySubCa1);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "SUBCLIENT1 BY SUBCA1", ksFileSubClient1BySubCa1, KSPW, SERVER, KSAPW, tsFileSubClient1BySubCa1, TSPW);	// certRootCa1ByRootCa1 is optional if certSubCa1ByRootCa1 in truststore
 
-		final KeyPair           kpSubServer2BySubCa2     = akpSubServer2BySubCa2.get();
-		final X500Name          nameSubServer2BySubCa2   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, HOSTNAME_LOCALHOST).addRDN(BCStyle.DC, "subca2").addRDN(BCStyle.DC, "rootca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final X500Name          nameSubServer2           = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, HOSTNAME_LOCALHOST).addRDN(BCStyle.DC, "subca2").addRDN(BCStyle.DC, "rootca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
 		final GeneralNames      sanSubServer2BySubCa2    = new GeneralNames(new GeneralName[]{new GeneralName(GeneralName.rfc822Name, "subserver2@subca2.rootca2.example.com"),new GeneralName(GeneralName.dNSName, HOSTNAME_LOCALHOST),new GeneralName(GeneralName.iPAddress, IP_127_0_0_1)});
-		final X509Certificate   certSubServer2BySubCa2   = CertChainDemo.signSubEntityCert(secureRandom, validNotBefore, validNotAfter, nameSubServer2BySubCa2, sanSubServer2BySubCa2, kuEntity, ekuServer, kpSubServer2BySubCa2, certSubCa2ByRootCa2, kpSubCa2ByRootCa2.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainSubServer2BySubCa2  = new X509Certificate[]{certSubServer2BySubCa2, certSubCa2ByRootCa2, certRootCa2ByRootCa2};	// certRootCa2ByRootCa2 is optional if certSubCa2ByRootCa2 in truststore
-		final X509Certificate[] trustSubServer2BySubCa2  = new X509Certificate[]{certSubCa2ByRootCa2, certRootCa2ByRootCa2};
-		final String            ksFileSubServer2BySubCa2 = TEMPDIR + "ksSubServer2BySubCa2."        +KSTYPE;
-		final String            tsFileSubServer2BySubCa2 = TEMPDIR + "tsSubServer2BySubCa2." +TSTYPE;
-		final KeyStore          ksSubServer2BySubCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileSubServer2BySubCa2, KSPW, SERVER, KSAPW, kpSubServer2BySubCa2.getPrivate(), chainSubServer2BySubCa2);	// NOSONAR
+		final KeyPair           kpSubServer2             = akpSubServer2.get();
+		final X509Certificate   certSubServer2BySubCa2   = CertChainDemo.signSubEntityCert(secureRandom, notBefore, notAfter, nameSubServer2, sanSubServer2BySubCa2, kuEntity, ekuServer, kpSubServer2, certSubCa2ByRootCa2, kpSubCa2.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainSubServer2BySubCa2  = CertUtil.toArray(certSubServer2BySubCa2, certSubCa2ByRootCa2, certRootCa2ByRootCa2);
+		final X509Certificate[] trustSubServer2BySubCa2  = CertUtil.toArray(certRootCa2ByRootCa2, certIssuingCa1ByIssuingCa1);	// vendor cert => zone 1 cert appended to zone 2 trust store
+		final String            ksFileSubServer2BySubCa2 = TEMPDIR + "ksSubServer2BySubCa2." + KSTYPE;
+		final String            tsFileSubServer2BySubCa2 = TEMPDIR + "tsSubServer2BySubCa2." + TSTYPE;
+		final KeyStore          ksSubServer2BySubCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileSubServer2BySubCa2, KSPW, SERVER, KSAPW, kpSubServer2.getPrivate(), chainSubServer2BySubCa2);	// NOSONAR
 		final KeyStore          tsSubServer2BySubCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileSubServer2BySubCa2, TSPW, trustSubServer2BySubCa2);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "SUBSERVER2 BY SUBCA2", ksFileSubServer2BySubCa2, KSPW, SERVER, KSAPW, tsFileSubServer2BySubCa2, TSPW);
 
-		final KeyPair           kpIssuingClient1ByIssuingCa1     = akpIssuingClient1ByIssuingCa1.get();
-		final X500Name          nameIssuingClient1ByIssuingCa1   = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, CLIENT).addRDN(BCStyle.DC, "issuingca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final X500Name          nameIssuingClient1               = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, CLIENT).addRDN(BCStyle.DC, "issuingca1").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
 		final GeneralNames      sanIssuingClient1ByIssuingCa1    = new GeneralNames(new GeneralName(GeneralName.rfc822Name, "issuingclient1@issuingca1.example.com"));
-		final X509Certificate   certIssuingClient1ByIssuingCa1   = CertChainDemo.signSubEntityCert(secureRandom, validNotBefore, validNotAfter, nameIssuingClient1ByIssuingCa1, sanIssuingClient1ByIssuingCa1, kuEntity, ekuClient, kpIssuingClient1ByIssuingCa1, certIssuingCa1ByIssuingCa1, kpIssuingCa1ByIssuingCa1.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainIssuingClient1ByIssuingCa1  = new X509Certificate[]{certIssuingClient1ByIssuingCa1, certIssuingCa1ByIssuingCa1};
-		final X509Certificate[] trustIssuingClient1ByIssuingCa1  = new X509Certificate[]{certIssuingCa1ByIssuingCa1, certSubCa1ByRootCa1, certRootCa1ByRootCa1};
+		final KeyPair           kpIssuingClient1                 = akpIssuingClient1.get();
+		final X509Certificate   certIssuingClient1ByIssuingCa1   = CertChainDemo.signSubEntityCert(secureRandom, notBefore, notAfter, nameIssuingClient1, sanIssuingClient1ByIssuingCa1, kuEntity, ekuClient, kpIssuingClient1, certIssuingCa1ByIssuingCa1, kpIssuingCa1.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainIssuingClient1ByIssuingCa1  = CertUtil.toArray(certIssuingClient1ByIssuingCa1, certIssuingCa1ByIssuingCa1);
+		final X509Certificate[] trustIssuingClient1ByIssuingCa1  = CertUtil.toArray(trustIssuingCa1ByIssuingCa1);
 		final String            ksFileIssuingClient1ByIssuingCa1 = TEMPDIR + "ksIssuingClient1ByIssuingCa1." + KSTYPE;
 		final String            tsFileIssuingClient1ByIssuingCa1 = TEMPDIR + "tsIssuingClient1ByIssuingCa1." + TSTYPE;
-		final KeyStore          ksIssuingClient1ByIssuingCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingClient1ByIssuingCa1, KSPW, SERVER, KSAPW, kpIssuingClient1ByIssuingCa1.getPrivate(), chainIssuingClient1ByIssuingCa1);	// NOSONAR
+		final KeyStore          ksIssuingClient1ByIssuingCa1     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingClient1ByIssuingCa1, KSPW, SERVER, KSAPW, kpIssuingClient1.getPrivate(), chainIssuingClient1ByIssuingCa1);	// NOSONAR
 		final KeyStore          tsIssuingClient1ByIssuingCa1     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingClient1ByIssuingCa1, TSPW, trustIssuingClient1ByIssuingCa1);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGCLIENT1 BY ISSUINGCA1", ksFileIssuingClient1ByIssuingCa1, KSPW, SERVER, KSAPW, tsFileIssuingClient1ByIssuingCa1, TSPW);
 
-		final KeyPair           kpIssuingServer2ByIssuingCa2     = akpIssuingServer2ByIssuingCa2.get();
-		final X500Name          nameIssuingServer2ByIssingCa2    = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, HOSTNAME_LOCALHOST).addRDN(BCStyle.DC, "issuingca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
+		final X500Name          nameIssuingServer2               = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.CN, HOSTNAME_LOCALHOST).addRDN(BCStyle.DC, "issuingca2").addRDN(BCStyle.DC, EXAMPLE).addRDN(BCStyle.DC, COM).build();
 		final GeneralNames      sanIssuingServer2ByIssuingCa2    = new GeneralNames(new GeneralName[]{new GeneralName(GeneralName.rfc822Name, "issuingserver2@issuingca2.example.com"),new GeneralName(GeneralName.dNSName, HOSTNAME_LOCALHOST),new GeneralName(GeneralName.iPAddress, IP_127_0_0_1)});
-		final X509Certificate   certIssuingServer2ByIssuingCa2   = CertChainDemo.signSubEntityCert(secureRandom, validNotBefore, validNotAfter, nameIssuingServer2ByIssingCa2, sanIssuingServer2ByIssuingCa2, kuEntity, ekuServer, kpIssuingServer2ByIssuingCa2, certIssuingCa2ByIssuingCa2, kpIssuingCa2ByIssuingCa2.getPrivate(), SIGALG_SHA256WITHRSA);
-		final X509Certificate[] chainIssuingServer2ByIssuingCa2  = new X509Certificate[]{certIssuingServer2ByIssuingCa2, certIssuingCa2ByIssuingCa2};
-		final X509Certificate[] trustIssuingServer2ByIssuingCa2  = new X509Certificate[]{certIssuingCa2ByIssuingCa2, certSubCa2ByRootCa2, certRootCa2ByRootCa2};
+		final KeyPair           kpIssuingServer2                 = akpIssuingServer2.get();
+		final X509Certificate   certIssuingServer2ByIssuingCa2   = CertChainDemo.signSubEntityCert(secureRandom, notBefore, notAfter, nameIssuingServer2, sanIssuingServer2ByIssuingCa2, kuEntity, ekuServer, kpIssuingServer2, certIssuingCa2ByIssuingCa2, kpIssuingCa2.getPrivate(), SIGALG_SHA256WITHRSA);
+		final X509Certificate[] chainIssuingServer2ByIssuingCa2  = CertUtil.toArray(certIssuingServer2ByIssuingCa2, certIssuingCa2ByIssuingCa2);
+		final X509Certificate[] trustIssuingServer2ByIssuingCa2  = CertUtil.toArray(trustIssuingCa2ByIssuingCa2);
 		final String            ksFileIssuingServer2ByIssuingCa2 = TEMPDIR + "ksIssuingServer2ByIssuingCa2." + KSTYPE;
 		final String            tsFileIssuingServer2ByIssuingCa2 = TEMPDIR + "tsIssuingServer2ByIssuingCa2." + TSTYPE;
-		final KeyStore          ksIssuingServer2ByIssuingCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingServer2ByIssuingCa2, KSPW, SERVER, KSAPW, kpIssuingServer2ByIssuingCa2.getPrivate(), chainIssuingServer2ByIssuingCa2);	// NOSONAR
+		final KeyStore          ksIssuingServer2ByIssuingCa2     = CertChainDemo.saveKeyStore(KSPROVIDER, KSTYPE, ksFileIssuingServer2ByIssuingCa2, KSPW, SERVER, KSAPW, kpIssuingServer2.getPrivate(), chainIssuingServer2ByIssuingCa2);	// NOSONAR
 		final KeyStore          tsIssuingServer2ByIssuingCa2     = CertChainDemo.saveTrustStore(TSPROVIDER, TSTYPE, tsFileIssuingServer2ByIssuingCa2, TSPW, trustIssuingServer2ByIssuingCa2);	// NOSONAR
 		CertChainDemo.validateVerifyTrackPrint(secureRandom, allCerts, "ISSUINGSERVER2 BY ISSUINGCA2", ksFileIssuingServer2ByIssuingCa2, KSPW, SERVER, KSAPW, tsFileIssuingServer2ByIssuingCa2, TSPW);
 
@@ -403,38 +401,38 @@ public class CertChainDemo {
 	}
 
 	// Create root CA certificate
-	public static X509Certificate signRootCaCert(final SecureRandom secureRandom, final Date validNotBefore, final Date validNotAfter, final X500Name subjectDN, final GeneralNames subjectGeneralNames, final KeyUsage subjectKeyUsage, final ExtendedKeyUsage extendedKeyUsage, final KeyPair subjectKeyPair, final String signingAlgorithm) throws Exception {
+	public static X509Certificate signRootCaCert(final SecureRandom secureRandom, final Date notBefore, final Date notAfter, final X500Name subjectDN, final GeneralNames subjectGeneralNames, final KeyUsage subjectKeyUsage, final ExtendedKeyUsage extendedKeyUsage, final KeyPair subjectKeyPair, final String signingAlgorithm) throws Exception {
 		final boolean isSubjectCA          = true;
 		final X509Certificate issuerCaCert = null;
 		final PrivateKey issuerPrivateKey  = null;
-		return signCert(secureRandom, validNotBefore, validNotAfter, isSubjectCA, subjectDN, subjectGeneralNames, subjectKeyUsage, extendedKeyUsage, subjectKeyPair, issuerCaCert, issuerPrivateKey, signingAlgorithm);
+		return signCert(secureRandom, notBefore, notAfter, isSubjectCA, subjectDN, subjectGeneralNames, subjectKeyUsage, extendedKeyUsage, subjectKeyPair, issuerCaCert, issuerPrivateKey, signingAlgorithm);
 	}
 
 	// Create subordinate CA certificate
-	public static X509Certificate signSubCaCert(final SecureRandom secureRandom, final Date validNotBefore, final Date validNotAfter, final X500Name subjectDN, final GeneralNames subjectGeneralNames, final KeyUsage subjectKeyUsage, final ExtendedKeyUsage extendedKeyUsage, final KeyPair subjectKeyPair, final X509Certificate issuerCaCert, final PrivateKey issuerPrivateKey, final String signingAlgorithm) throws Exception {
+	public static X509Certificate signSubCaCert(final SecureRandom secureRandom, final Date notBefore, final Date notAfter, final X500Name subjectDN, final GeneralNames subjectGeneralNames, final KeyUsage subjectKeyUsage, final ExtendedKeyUsage extendedKeyUsage, final KeyPair subjectKeyPair, final X509Certificate issuerCaCert, final PrivateKey issuerPrivateKey, final String signingAlgorithm) throws Exception {
 		final boolean isSubjectCA = true;
-		return signCert(secureRandom, validNotBefore, validNotAfter, isSubjectCA, subjectDN, subjectGeneralNames, subjectKeyUsage, extendedKeyUsage, subjectKeyPair, issuerCaCert, issuerPrivateKey, signingAlgorithm);
+		return signCert(secureRandom, notBefore, notAfter, isSubjectCA, subjectDN, subjectGeneralNames, subjectKeyUsage, extendedKeyUsage, subjectKeyPair, issuerCaCert, issuerPrivateKey, signingAlgorithm);
 	}
 
 	// Create cross CA certificate
-	public static X509Certificate signCrossCaCert(final SecureRandom secureRandom, final Date validNotBefore, final Date validNotAfter, final X500Name subjectDN, final KeyUsage subjectKeyUsage, final ExtendedKeyUsage extendedKeyUsage, final PublicKey subjectPublicKey, final X509Certificate issuerCaCert, final PrivateKey issuerPrivateKey, final String signingAlgorithm) throws Exception {
+	public static X509Certificate signCrossCaCert(final SecureRandom secureRandom, final Date notBefore, final Date notAfter, final X500Name subjectDN, final KeyUsage subjectKeyUsage, final ExtendedKeyUsage extendedKeyUsage, final PublicKey subjectPublicKey, final X509Certificate issuerCaCert, final PrivateKey issuerPrivateKey, final String signingAlgorithm) throws Exception {
 		final boolean      isSubjectCA         = true;
 		final GeneralNames subjectGeneralNames = null;
 		final KeyPair      subjectKeyPair      = new KeyPair(subjectPublicKey, null);	// private key not required for subject
-		return signCert(secureRandom, validNotBefore, validNotAfter, isSubjectCA, subjectDN, subjectGeneralNames, subjectKeyUsage, extendedKeyUsage, subjectKeyPair, issuerCaCert, issuerPrivateKey, signingAlgorithm);
+		return signCert(secureRandom, notBefore, notAfter, isSubjectCA, subjectDN, subjectGeneralNames, subjectKeyUsage, extendedKeyUsage, subjectKeyPair, issuerCaCert, issuerPrivateKey, signingAlgorithm);
 	}
 
 	// Create subordinate CA certificate
-	public static X509Certificate signSubEntityCert(final SecureRandom secureRandom, final Date validNotBefore, final Date validNotAfter, final X500Name subjectDN, final GeneralNames subjectGeneralNames, final KeyUsage subjectKeyUsage, final ExtendedKeyUsage extendedKeyUsage, final KeyPair subjectKeyPair, final X509Certificate issuerCaCert, final PrivateKey issuerPrivateKey, final String signingAlgorithm) throws Exception {
+	public static X509Certificate signSubEntityCert(final SecureRandom secureRandom, final Date notBefore, final Date notAfter, final X500Name subjectDN, final GeneralNames subjectGeneralNames, final KeyUsage subjectKeyUsage, final ExtendedKeyUsage extendedKeyUsage, final KeyPair subjectKeyPair, final X509Certificate issuerCaCert, final PrivateKey issuerPrivateKey, final String signingAlgorithm) throws Exception {
 		final boolean isSubjectCA = false;
-		return signCert(secureRandom, validNotBefore, validNotAfter, isSubjectCA, subjectDN, subjectGeneralNames, subjectKeyUsage, extendedKeyUsage, subjectKeyPair, issuerCaCert, issuerPrivateKey, signingAlgorithm);
+		return signCert(secureRandom, notBefore, notAfter, isSubjectCA, subjectDN, subjectGeneralNames, subjectKeyUsage, extendedKeyUsage, subjectKeyPair, issuerCaCert, issuerPrivateKey, signingAlgorithm);
 	}
 
 	// Create root, subordinate, or cross CA certificates
 	private static X509Certificate signCert(
 			final SecureRandom     secureRandom,
-			final Date             validNotBefore,
-			final Date             validNotAfter,
+			final Date             notBefore,
+			final Date             notAfter,
 			final boolean          isSubjectCA,
 			final X500Name         subjectDN,
 			final GeneralNames     subjectGeneralNames,
@@ -463,7 +461,7 @@ public class CertChainDemo {
 			issuerX500Name = X500Name.getInstance(issuerCaCert.getSubjectX500Principal().getEncoded());	// Preserves RDN order, from JcaX500NameUtil.getIssuer()
 		}
 
-		final X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(issuerX500Name, CertUtil.generateSerialNumber(secureRandom), validNotBefore, validNotAfter, subjectDN, SubjectPublicKeyInfo.getInstance(subjectKeyPair.getPublic().getEncoded()));
+		final X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(issuerX500Name, CertUtil.generateSerialNumber(secureRandom), notBefore, notAfter, subjectDN, SubjectPublicKeyInfo.getInstance(subjectKeyPair.getPublic().getEncoded()));
 		final JcaContentSignerBuilder builder = new JcaContentSignerBuilder(signingAlgorithm);	// EX: "SHA256withRSA"
 
 		// X509 V3 Extensions Doc: https://access.redhat.com/documentation/en-US/Red_Hat_Certificate_System/8.0/html/Admin_Guide/Standard_X.509_v3_Certificate_Extensions.html
