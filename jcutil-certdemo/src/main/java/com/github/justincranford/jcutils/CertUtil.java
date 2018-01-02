@@ -206,4 +206,23 @@ public class CertUtil {
 			// do nothing
 		}
 	} };
+
+	public static X509Certificate[] toArray(final X509Certificate[] array, final X509Certificate... src) {
+		final ArrayList<X509Certificate> list = new ArrayList<>();
+		for (final X509Certificate cert : array) {
+			list.add(cert);
+		}
+		return copy(list, src);
+	}
+
+	public static X509Certificate[] toArray(final X509Certificate... src) {
+		return copy(new ArrayList<>(), src);
+	}
+
+	public static X509Certificate[] copy(final ArrayList<X509Certificate> dest, final X509Certificate... src) {
+		for (final X509Certificate cert : src) {
+			dest.add(cert);
+		}
+		return dest.toArray(new X509Certificate[dest.size()]);
+	}
 }
