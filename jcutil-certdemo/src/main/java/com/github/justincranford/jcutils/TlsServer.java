@@ -71,7 +71,7 @@ public class TlsServer extends Thread {
 //			kmf.init(new KeyStoreBuilderParameters(clientCrtBuilder));
 			final KeyManager[] keyManagers = kmf.getKeyManagers();
 //			keyManagers[0] = new X509KeyManagerAppendTrustManager((X509KeyManager)keyManagers[0], (X509TrustManager)trustManagers[0], null);	// Wrap first KeyManager with a delegator object to append secondary trust chains from truststore
-			final SSLContext sslContext = SSLContext.getInstance(CertChainDemo.TLS_V1_2_PROTOCOL);
+			final SSLContext sslContext = SSLContext.getInstance(CertChainDemo.TLS_V1_2_PROTOCOL, CertChainDemo.SUNJSSE);
 			sslContext.init(keyManagers, null, this.secureRandom);
 			final SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
 			try (final SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(this.port, 1, this.hostAddress)) {

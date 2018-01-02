@@ -56,7 +56,7 @@ public class TlsClient extends Thread {
 	        tmf.init(ts);
 			final TrustManager[] trustManagers = tmf.getTrustManagers();
 //			trustManagers[0] = new X509TrustManagerAssertEKUs((X509TrustManager)trustManagers[0], null);	// Wrap first TrustManager with a delegator object to enforce mandatory EKUs
-	        final SSLContext sslContext = SSLContext.getInstance(CertChainDemo.TLS_V1_2_PROTOCOL);
+	        final SSLContext sslContext = SSLContext.getInstance(CertChainDemo.TLS_V1_2_PROTOCOL, CertChainDemo.SUNJSSE);
 			sslContext.init(null, trustManagers, this.secureRandom);	// Use trustAllCerts for debug only to disable validation
 	        final SSLSocketFactory fact = sslContext.getSocketFactory();
 	        try (final SSLSocket cSock = (SSLSocket)fact.createSocket(this.hostAddress, this.port)) {	// NOSONAR
