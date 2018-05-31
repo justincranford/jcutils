@@ -17,7 +17,6 @@
 			<groupId>com.github.justincranford.jcutils</groupId>
 			<artifactId>jcutil-validation</artifactId>
 			<version>${project.version}</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
