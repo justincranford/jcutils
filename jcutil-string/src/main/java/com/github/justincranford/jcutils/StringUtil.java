@@ -1,5 +1,10 @@
 package com.github.justincranford.jcutils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,11 +31,13 @@ public class StringUtil {
 	}
 
 	public static String base64Encode(final byte[] unencodedBytes) {
-		return DatatypeConverter.printBase64Binary(unencodedBytes);
+//		return Base64.getEncoder().encodeToString(unencodedBytes);		// Java 8+
+		return DatatypeConverter.printBase64Binary(unencodedBytes);		// Java 1.3+
 	}
 
 	public static byte[] base64Decode(final String encodedCharacters) {
-		return DatatypeConverter.parseBase64Binary(encodedCharacters);
+//		return Base64.getDecoder().decode(encodedCharacters);			// Java 8+
+		return DatatypeConverter.parseBase64Binary(encodedCharacters);	// Java 1.3+
 	}
 
 	public static String hexEncode(final byte[] unencodedBytes) {
@@ -287,5 +294,28 @@ public class StringUtil {
 			}
 		}
 		return strings;
+	}
+
+	public static byte[] serializeToByteArray(final Object object) throws IOException, ClassNotFoundException {
+		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+			try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+				oos.writeObject(object);
+			}
+			return baos.toByteArray();
+		}
+	}
+
+	public static Object deserializeFromByteArray(final byte[] byteArray) throws IOException, ClassNotFoundException {
+		try (final ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(byteArray))) {
+			return ois.readObject();
+		}
+	}
+
+	public static String serializeToString(final Object object) throws IOException, ClassNotFoundException {
+		return StringUtil.base64Encode(StringUtil.serializeToByteArray(object));
+	}
+
+	public static Object deserializeFromString(final String string) throws IOException, ClassNotFoundException {
+		return StringUtil.deserializeFromByteArray(StringUtil.base64Decode(string));
 	}
 }
